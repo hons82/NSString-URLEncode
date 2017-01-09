@@ -14,11 +14,16 @@
 }
 
 - (NSString *)URLEncodeUsingEncoding:(NSStringEncoding)encoding {
-    return (__bridge_transfer NSString *)CFURLCreateStringByAddingPercentEscapes(NULL,
-                                                                                 (__bridge CFStringRef)self,
-                                                                                 NULL,
-                                                                                 (CFStringRef)@"!*'\"();:@&=+$,/?%#[]% ",
-                                                                                 CFStringConvertNSStringEncodingToEncoding(encoding));
+    if ([self respondsToSelector:@selector(stringByAddingPercentEncodingWithAllowedCharacters:)]) {
+        NSCharacterSet *URLFullCharacterSet = [[NSCharacterSet characterSetWithCharactersInString:@" \"#%/:<>?@[\\]^`{|},()&!$'="] invertedSet];
+        return [self stringByAddingPercentEncodingWithAllowedCharacters:URLFullCharacterSet];
+    } else {
+      return (__bridge_transfer NSString *)CFURLCreateStringByAddingPercentEscapes(NULL,
+                                                                               (__bridge CFStringRef)self,
+                                                                               NULL,
+                                                                               (CFStringRef)@"!*'\"();:@&=+$,/?%#[]% ",
+                                                                               CFStringConvertNSStringEncodingToEncoding(encoding));
+    }
 }
 
 - (NSString *)URLDecode {
@@ -26,10 +31,14 @@
 }
 
 - (NSString *)URLDecodeUsingEncoding:(NSStringEncoding)encoding {
-	return (__bridge_transfer NSString *)CFURLCreateStringByReplacingPercentEscapesUsingEncoding(NULL,
-                                                                                                 (__bridge CFStringRef)self,
-                                                                                                 CFSTR(""),
-                                                                                                 CFStringConvertNSStringEncodingToEncoding(encoding));
+    if ([self respondsToSelector:@selector(stringByRemovingPercentEncoding)]) {
+        return [self stringByRemovingPercentEncoding];
+    } else {
+      return (__bridge_transfer NSString *)CFURLCreateStringByReplacingPercentEscapesUsingEncoding(NULL,
+                                                                                               (__bridge CFStringRef)self,
+                                                                                               CFSTR(""),
+                                                                                               CFStringConvertNSStringEncodingToEncoding(encoding));
+    }
 }
 
 @end
